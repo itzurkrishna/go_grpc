@@ -8,7 +8,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	pb "grpc-microservice/auto_generated/calculator"
+	pb "calculator.com/m/proto/proto"
 )
 
 type server struct {
