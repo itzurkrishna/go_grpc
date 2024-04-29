@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	pb "grpc-microservice/auto_generated/calculator" // Import the protobuf package
+	pb "calculator.com/m/proto/proto" // Import the protobuf package
 	"log"
 
 	"google.golang.org/grpc"

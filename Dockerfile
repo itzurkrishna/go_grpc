@@ -1,38 +1,36 @@
-# Use a Golang base image with Go 1.19 or later for building
-FROM golang:1.19 AS builder
+# Use a Golang base image with Go 1.20 or later for building
+FROM golang:1.20 AS builder
 
-# Set the working directory for the server
+# Set the working directory
 WORKDIR /app
 
-# Copy the server source code and download dependencies
-COPY server/go.mod server/go.sum ./
+# Copy the Go module files
+COPY go.mod go.sum ./
+
+# Download dependencies
 RUN go mod download
 
-# Copy the client source code and download dependencies
-COPY client/go.mod client/go.sum ./client/
-RUN cd client && go mod download
+# Copy the protobuf files
+COPY calculator.proto proto/
 
-# Copy the protobuf files and auto-generated code
-COPY calculator.proto .
-COPY auto_generated/calculator ./auto_generated/calculator/
+# Depending on the service, copy and build the appropriate source code
+ARG SERVICE
+COPY ${SERVICE}/ ./${SERVICE}/
 
-# Copy the rest of the server source code
-COPY server/. ./
+# Set the working directory to the service directory
+WORKDIR /app/${SERVICE}
 
-# Build the server binary
-RUN go build -o grpc-server .
+# Build the service
+RUN go build -o ${SERVICE}
 
-# Set the working directory to /app in the final image
-WORKDIR /app
-
-# Use a minimal base image for the final Docker image
+# Set the base image
 FROM alpine:latest
 
-# Copy the server binary from the builder stage
-COPY --from=builder /app/grpc-server ./server/
+# Set the working directory
+WORKDIR /app
 
-# Expose any ports needed by the server
-EXPOSE 50051
+# Copy the built binary from the builder stage
+COPY --from=builder /app/${SERVICE}/${SERVICE} ./
 
-# Command to run the server
-CMD ["./server/grpc-server"]
+# Command to run the service
+CMD ["./client"]
